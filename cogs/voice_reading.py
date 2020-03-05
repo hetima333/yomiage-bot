@@ -102,22 +102,11 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         with self.words_file.open('w') as f:
             f.write(json.dumps(self.words, ensure_ascii=False, indent=4))
 
-    def _add_new_user(self, user_id) -> None:
-        '''新規ユーザーの設定追加'''
-        self.USER_SETTINGS[user_id] = copy(self.USER_DEFAULT)
-
-    def _update_user_settings(self) -> None:
-        '''ユーザー設定の更新'''
-        with self.USER_FILE.open('w') as f:
-            f.write(json.dumps(self.USER_SETTINGS, indent=4))
-
     def _set_status(self, user_id, status: str, param) -> None:
         '''ユーザー設定にパラメータを設定'''
-        _user_id = str(user_id)
-        if _user_id not in self.USER_SETTINGS:
-            self._add_new_user(_user_id)
-        self.USER_SETTINGS[_user_id][status] = param
-        self._update_user_settings()
+        setting = UserSetting.get_setting(user_id)
+        setting[status] = param
+        UserSetting.update(user_id, setting)
 
     async def _update_status_and_send_msg(
             self, ctx: commands.Context,
@@ -125,20 +114,18 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         '''ユーザー設定のパラメータ設定とメッセージ送信'''
         user_id = str(ctx.author.id)
         mention = ctx.author.mention
-        before = self.USER_SETTINGS.get(
-            str(user_id), self.USER_DEFAULT)[status]
+        before = UserSetting.get_setting(user_id)[status]
         self._set_status(user_id, status, param)
-        after = self.USER_SETTINGS[user_id][status]
         await ctx.channel.send(
             content=self.get_serif(
-                "status_change", mention, status_ja, before, after
+                "status_change", mention, status_ja, before, param
                 )
         )
 
     async def _show_user_setting(self, msg: discord.Message) -> None:
         '''ユーザー設定の表示'''
         user_id = str(msg.author.id)
-        setting = self.USER_SETTINGS.get(user_id, self.USER_DEFAULT)
+        setting = UserSetting.get_setting(user_id)
         # Embedの作成
         embed = discord.Embed(color=Config.get_global()['embed_color'])
         embed.set_author(
@@ -183,7 +170,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         ・male
         ・miku
         '''
-        if name not in self.VOICES:
+        if name not in VoiceFactory.VOICES:
             await ctx.channel.send(self.get_serif('voice_not_exist', ctx.author.mention))
             return
         await self._update_status_and_send_msg(
@@ -214,13 +201,13 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
             ctx, 'intone', '声のイントネーション', _param
         )
 
-    @voice.command(aliases=['vol'])
-    async def volume(self, ctx, param: float):
-        '''読み上げ音量を変更するわ(※現在使用できません)'''
-        _param = MathUtility.clamp(param, 0.0, 100.0)
-        await self._update_status_and_send_msg(
-            ctx, 'volume', '声の大きさ', _param
-        )
+    # @voice.command(aliases=['vol'])
+    # async def volume(self, ctx, param: float):
+    #     '''読み上げ音量を変更するわ(※現在使用できません)'''
+    #     _param = MathUtility.clamp(param, 0.0, 100.0)
+    #     await self._update_status_and_send_msg(
+    #         ctx, 'volume', '声の大きさ', _param
+    #     )
 
     @commands.command(aliases=['aj'])
     async def auto_join(self, ctx):
@@ -244,8 +231,6 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         else:
             watch_channel_id['voice'] = 0
             watch_channel_id['text'] = 0
-
-        print(conf)
 
         GuildSetting.update_setting(ctx.guild.id, conf)
 
@@ -458,7 +443,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         else:
             replacements = {}
             for i in range(len(args)):
-                replacements[f'${i}'] = args[i]
+                replacements[f'${i}'] = str(args[i])
 
             # NOTE: 参考URL
             # https://arakan-pgm-ai.hatenablog.com/entry/2019/04/04/090000

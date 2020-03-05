@@ -8,13 +8,13 @@ import subprocess
 from copy import copy
 from pathlib import Path
 from .math_util import MathUtility
+from setting import UserSetting
 
 
 class VoiceFactory():
     TEMP_DIR = Path('/tmp')
     DICT_DIR = Path(os.environ['DIC_DIR'])
     SYS_VOICE_DIR = Path(os.environ['SYS_VOICE_DIR'])
-    USER_FILE = Path('./data/json/user_settings.json')
     SOUND_LINK_FILE = Path('../lunalu-bot/data/json/sound_links.json')
     VOICES = {
         'normal': SYS_VOICE_DIR / 'mei/mei_normal.htsvoice',
@@ -25,22 +25,10 @@ class VoiceFactory():
         'male': SYS_VOICE_DIR / 'm100/nitech_jp_atr503_m001.htsvoice',
         'miku': SYS_VOICE_DIR / 'miku/miku.htsvoice',
     }
-    USER_DEFAULT = {
-        'voice': 'normal',
-        'speed': 50.0,
-        'tone': 50.0,
-        'intone': 50.0,
-        'threshold': 50.0,
-        'allpass': 0.0,
-        'volume': 50.0,
-    }
 
     @classmethod
     def get_user_setting(cls, user_id: int) -> dict:
-        with cls.USER_FILE.open() as f:
-            user_settings = json.loads(f.read())
-
-        setting = user_settings.get(str(user_id), cls.USER_DEFAULT)
+        setting = UserSetting.get_setting(user_id)
         # NOTE: ユーザー設定内のパラメータは0~100の数値なので/100.0している
         _setting = copy(setting)
         _setting['speed'] = MathUtility.lerp(

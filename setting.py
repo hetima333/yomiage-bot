@@ -17,7 +17,7 @@ class GuildSetting():
     def get_setting(cls, guild_id: int) -> dict:
         '''サーバー設定を取得する'''
         data = cls.get_all_settings()
-        return data(str(guild_id), data['default'])
+        return data.get(str(guild_id), data['default'])
 
     @classmethod
     def update_setting(cls, guild_id: int, setting: dict) -> None:
@@ -41,6 +41,7 @@ class UserSetting():
     def get_setting(cls, user_id: int) -> dict:
         '''ユーザー設定を取得する'''
         data = cls.get_all_settings()
+        # NOTE: 初期設定をランダム化する場合は、ここでいい感じにする
         return data.get(str(user_id), data['default'])
 
     @classmethod
