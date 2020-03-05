@@ -1,0 +1,9 @@
+{
+    "default": {
+        "guild_name": "",
+        "watch_channel_id": {
+            "voice": 0,
+            "text": 0
+        }
+    }
+}
