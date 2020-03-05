@@ -105,6 +105,7 @@ venv.bak/
 
 # データ
 data/json/*
+data/settings*
 !data/json/sound_links.json
 
 # テスト
