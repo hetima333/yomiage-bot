@@ -1,0 +1,14 @@
+{
+	"leave_voice_channel": "読み上げを終了するわ。お疲れ様〜",
+	"complete_word_add": "$0 を $1 と読むことにしたわ",
+	"error_word_add": "単語登録の形式が間違っているわ…\n$0wa 単語 読み で登録できるわ",
+	"complete_word_delete": "$0 の読みを削除したわ",
+	"error_word_delele": "単語削除の形式が間違っているわ…\n$0wd 単語 で削除できるわ",
+	"start_reading": "$0 の読み上げを始めるわ…！",
+	"already_reading": "既に $0 の読み上げ中よ",
+	"auto_join_enable": "誰かが `$0` に接続した時、$1 の読み上げを始めるわ",
+	"auto_join_disable": "自動読み上げをやめるわ",
+	"status_change": "$0 $1を`$2`から`$3`に変更したわ",
+	"show_user_status": "$0 今のあなたの読み上げ設定よ",
+	"voice_not_exist": "$0 その名前のボイスは存在しないわ"
+}
