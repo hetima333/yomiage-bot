@@ -1,0 +1,92 @@
+{
+	"(ヤバ|やば)(イ|い)わよ(！|!)?": {
+		"name": "ヤバイわよ！",
+		"desc": "キャルのヤバイわよ！",
+		"src": "プリンセスコネクト！Re:Dive",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/679877273922437248/yabai.mp3"
+	},
+	"(ヤバ|やば)(イ|い)ですね☆?": {
+		"name": "ヤバイですね☆",
+		"desc": "ペコリーヌのヤバイですね☆",
+		"src": "プリンセスコネクト！Re:Dive",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680077833002942469/yabaidesune.mp3"
+	},
+	"希望の花": {
+		"name": "希望の花",
+		"desc": "オルガが死ぬ時に流れるBGM",
+		"src": "機動戦士ガンダム 鉄血のオルフェンズ",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/679877307824996381/kibounohana.mp3"
+	},
+	"(止|と)まるんじゃねぇぞ…?": {
+		"name": "止まるんじゃねぇぞ…",
+		"desc": "オルガが死ぬ時放ったセリフ",
+		"src":"機動戦士ガンダム 鉄血のオルフェンズ",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680312688097755145/tomarunzyanelezo.mp3"
+	},
+	"(よ゛ろ゛し゛く゛お゛ね゛か゛い゛し゛ま゛～゛す゛|よろしくおねがいしまーす|よろしくお願いしまーす)": {
+		"name": "よ゛ろ゛し゛く゛お゛ね゛か゛い゛し゛ま゛～゛す゛",
+		"desc": "アリサ役の優木かなの挨拶",
+		"src": "しゃどばすチャンネル",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680312196101570757/kanashii_greet.mp3"
+	},
+	"(きゃっきゃ|キャッキャ|ｷｬｯｷｬ)": {
+		"name": "ｷｬｯｷｬ",
+		"desc": "アリサ役の優木かなの挨拶（？）",
+		"src": "しゃどばすチャンネル",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680016245634105373/kyakkya_01.mp3"
+	},
+	"デデドン(!|！)?": {
+		"name": "デデドン！",
+		"desc": "絶望",
+		"src": "nash music library",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680076789275557927/dededon.mp3"
+	},
+	"(ドスケベ|どすけべ)音頭": {
+		"name": "ドスケベ音頭",
+		"desc": "女部田郁子のドスケベ音頭",
+		"src": "抜きゲーみたいな島に住んでる貧乳はどうすりゃいいですか？ 2",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680318249337880600/dosukebe.mp3"
+	},
+	"お(前|まえ)を(殺|ころ)す": {
+		"name": "お前を殺す",
+		"desc": "ヒイロがリリーナに放ったセリフ。何なのこの人…",
+		"src": "新機動戦記ガンダムW",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680335174365610035/omaewokorosu.mp3"
+	},
+	"お(前|まえ)に(負|ま)けるなら(悔|く)いは(な|無)いさ": {
+		"name": "お前に負けるなら悔いはないさ",
+		"desc": "ローウェン敗北ボイス",
+		"src": "Shadowverse",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680362543419621386/omaenimakerunarakuihanaisa.mp3"
+	},
+	"(死|し)ねぇ?": {
+		"name": "死ねぇ！",
+		"desc": "闇野の死ねぇ！",
+		"src": "闇野",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680364828488892435/033.wav"
+	},
+	"はー?い、?よーい(スタート|すたーと)": {
+		"name": "はい、よーいスタート",
+		"desc": "RTA始まる時に流れる音声ってことで終わりでいいんじゃない？",
+		"src": "NSOK",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680385749333704718/dfcedc5ccbd3b3ad.mp3"
+	},
+	"(ザ|ざ)(・|、)?(エンド|えんど)(ってね)?": {
+		"name": "ザ・エンドってね",
+		"desc": "マリオワールド不正RTAをした生主がエンディングに放った言葉",
+		"src": "マリオワールド不正RTA",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680379639587143696/8ea4f6a2c1aa282b.mp3"
+	},
+	"(俺|おれ)の(勝|か)ち(!|！)?": {
+		"name": "俺の勝ち",
+		"desc": "俺の勝ち！なんで負けたか、明日まで考えといてください",
+		"src": "ペプシジャパン 本田とじゃんけん",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/680456897685618718/ef96b1e08fb363d4.mp3"
+	},
+	"(あはぁ|アハァ)(ー|〜)?": {
+		"name": "あはぁ",
+		"desc": "戌亥とこ",
+		"src": "戌亥とこ",
+		"link": "https://cdn.discordapp.com/attachments/475975692195201034/682620242215567370/a54d32a25c6bde49.mp3"
+	}
+}

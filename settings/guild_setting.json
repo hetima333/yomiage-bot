@@ -1,0 +1,16 @@
+{
+    "default": {
+        "guild_name": "",
+        "watch_channel_id": {
+            "voice": 0,
+            "text": 0
+        }
+    },
+    "463748479924174888": {
+        "guild_name": "",
+        "watch_channel_id": {
+            "voice": 463748479924174892,
+            "text": 500215831784062977
+        }
+    }
+}

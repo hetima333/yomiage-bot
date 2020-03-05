@@ -1,0 +1,481 @@
+import asyncio
+import json
+import re
+import random
+from copy import copy
+from pathlib import Path
+
+import discord
+import emoji
+import ffmpeg
+from discord.ext import commands
+
+from cogs.utils.msg_util import MessageConverter
+from cogs.utils.voice_util import VoiceFactory
+from cogs.utils.math_util import MathUtility
+from config import Config
+from setting import GuildSetting, UserSetting
+
+
+class VoiceReading(commands.Cog, name='VC読み上げ'):
+    def __init__(self, bot):
+        self.bot = bot
+        self.target_channel = None
+        # 読み上げる文字数
+        self.read_char_cnt = 50
+
+        self.words_file = Path('./data/json/words.json')
+        if self.words_file.exists() is False:
+            with self.words_file.open('w') as f:
+                f.write(r'{}')
+        with self.words_file.open() as f:
+            self.words = json.loads(f.read())
+
+        self.sefifs_file = Path('./data/json/serifs.json')
+        with self.sefifs_file.open() as f:
+            self.serifs = json.loads(f.read())
+
+    async def _leave_voice_channel(self, guild_id: int):
+        await self.target_channel.send(self.get_serif("leave_voice_channel"))
+        self.target_channel = None
+        vc = self.get_guild_voice_client(guild_id)
+        if vc is None:
+            return
+        await vc.disconnect()
+
+    def _convert_message(
+            self, msg: str, max_length=0) -> str:
+        re_url = re.compile(r'https?://([\w-]+\.)+[\w-]+(/[-\w ./?%&=#]*)?')
+        re_emoji = re.compile(r':(\w+):\d+')
+        re_newline = re.compile(r'\n')
+        re_code = re.compile(r'```.+```')
+        re_than = re.compile(r'^<(.+)>$')
+
+        _msg = msg
+        _msg = re_url.sub('URL省略', _msg)
+        _msg = re_emoji.sub(r'\1', _msg)
+        _msg = re_than.sub(r'\1', _msg)
+        _msg = re_code.sub('コード省略', _msg)
+        _msg = emoji.demojize(_msg)
+
+        # TODO: 自作辞書変換
+        # TODO: ファイルから読み込みたい
+        re_kusa = re.compile(r'w{2,}')
+        _msg = re_kusa.sub('わらわら', _msg)
+
+        # 英語かな変換
+        _msg = MessageConverter.replace_eng_to_kana(_msg)
+
+        # ローマ字かな変換
+        _msg = MessageConverter.replace_roman_to_kana(_msg)
+
+        # メッセージを小文字に変換
+        _msg = _msg.lower()
+
+        # ユーザー辞書変換
+        for (pre, post) in self.words.items():
+            _pre = pre.lower()
+            if _pre in _msg:
+                _msg = _msg.replace(_pre, post)
+
+        # TODO: ローマ字辞書変換
+
+        _msg = re_newline.sub(' ', _msg)
+
+        # 長い文章はカットする
+        if max_length != 0:
+            if len(_msg) > max_length:
+                _msg = _msg[:max_length] + '以下略'
+
+        print(_msg)
+
+        return _msg
+
+    def _update_word(self) -> None:
+        '''単語の更新'''
+        _list = sorted(self.words.items(),
+                       key=lambda x: len(x[0]), reverse=True)
+        d = {}
+        for k, v in _list:
+            d[k] = v
+        self.words = d
+        with self.words_file.open('w') as f:
+            f.write(json.dumps(self.words, ensure_ascii=False, indent=4))
+
+    def _add_new_user(self, user_id) -> None:
+        '''新規ユーザーの設定追加'''
+        self.USER_SETTINGS[user_id] = copy(self.USER_DEFAULT)
+
+    def _update_user_settings(self) -> None:
+        '''ユーザー設定の更新'''
+        with self.USER_FILE.open('w') as f:
+            f.write(json.dumps(self.USER_SETTINGS, indent=4))
+
+    def _set_status(self, user_id, status: str, param) -> None:
+        '''ユーザー設定にパラメータを設定'''
+        _user_id = str(user_id)
+        if _user_id not in self.USER_SETTINGS:
+            self._add_new_user(_user_id)
+        self.USER_SETTINGS[_user_id][status] = param
+        self._update_user_settings()
+
+    async def _update_status_and_send_msg(
+            self, ctx: commands.Context,
+            status: str, status_ja: str, param) -> None:
+        '''ユーザー設定のパラメータ設定とメッセージ送信'''
+        user_id = str(ctx.author.id)
+        mention = ctx.author.mention
+        before = self.USER_SETTINGS.get(
+            str(user_id), self.USER_DEFAULT)[status]
+        self._set_status(user_id, status, param)
+        after = self.USER_SETTINGS[user_id][status]
+        await ctx.channel.send(
+            content=self.get_serif(
+                "status_change", mention, status_ja, before, after
+                )
+        )
+
+    async def _show_user_setting(self, msg: discord.Message) -> None:
+        '''ユーザー設定の表示'''
+        user_id = str(msg.author.id)
+        setting = self.USER_SETTINGS.get(user_id, self.USER_DEFAULT)
+        # Embedの作成
+        embed = discord.Embed(color=Config.get_global()['embed_color'])
+        embed.set_author(
+            name=f'{msg.author.display_name} のボイス読み上げ設定',
+            icon_url=msg.author.avatar_url
+        )
+        status_list = [
+            f'声の種類　　　　： {setting["voice"]}',
+            f'話す速度　　　　： {setting["speed"]}',
+            f'トーン　　　　　： {setting["tone"]}',
+            f'イントネーション： {setting["intone"]}'
+        ]
+        embed.add_field(name='ユーザー設定', value='\n'.join(status_list))
+
+        await msg.channel.send(
+            content=self.get_serif("show_user_status", msg.author.mention),
+            embed=embed
+        )
+
+    # ====== ユーザー設定関数群 ======
+    @commands.group(aliases=['vo'])
+    async def voice(self, ctx):
+        '''読み上げ音声に関する設定を行えるわ'''
+        if ctx.invoked_subcommand is None:
+            await ctx.channel.send(f'コマンドが間違っているわ…\n例えば、声のトーンを変更したい時は\n`{config.COMMAND_PREFIX}voice tone -20~20の数値` と入力してみて')
+
+    @voice.command()
+    async def status(self, ctx):
+        '''ボイス設定状況を表示するわ'''
+        await self._show_user_setting(ctx.message)
+
+    @voice.command(aliases=['ch'])
+    async def change(self, ctx, name: str):
+        '''
+        読み上げボイスの種類を変更するわ
+        変更できるボイスは以下のとおりよ。
+        ・normal
+        ・happy
+        ・bashful
+        ・angry
+        ・sad
+        ・male
+        ・miku
+        '''
+        if name not in self.VOICES:
+            await ctx.channel.send(self.get_serif('voice_not_exist', ctx.author.mention))
+            return
+        await self._update_status_and_send_msg(
+            ctx, 'voice', 'ボイスの種類', name
+        )
+
+    @voice.command(aliases=['spd'])
+    async def speed(self, ctx, param: float):
+        '''読み上げ速度を変更するわ'''
+        _param = MathUtility.clamp(param, 0.0, 100.0)
+        await self._update_status_and_send_msg(
+            ctx, 'speed', '話す速度', _param
+        )
+
+    @voice.command()
+    async def tone(self, ctx, param: float):
+        '''声のトーンを変更するわ'''
+        _param = MathUtility.clamp(param, 0.0, 100.0)
+        await self._update_status_and_send_msg(
+            ctx, 'tone', '声のトーン', _param
+        )
+
+    @voice.command()
+    async def intone(self, ctx, param: float):
+        '''イントネーションを変更するわ'''
+        _param = MathUtility.clamp(param, 0.0, 100.0)
+        await self._update_status_and_send_msg(
+            ctx, 'intone', '声のイントネーション', _param
+        )
+
+    @voice.command(aliases=['vol'])
+    async def volume(self, ctx, param: float):
+        '''読み上げ音量を変更するわ(※現在使用できません)'''
+        _param = MathUtility.clamp(param, 0.0, 100.0)
+        await self._update_status_and_send_msg(
+            ctx, 'volume', '声の大きさ', _param
+        )
+
+    @commands.command(aliases=['aj'])
+    async def auto_join(self, ctx):
+        '''VCに接続した時に自動的に私を呼ぶことができるわ'''
+        voice_state = ctx.author.voice
+        if voice_state is None:
+            await ctx.channel.send('auto_join：VCに接続していないと設定できないメッセージを追加する')
+            return
+
+        if voice_state.channel is None:
+            await ctx.channel.send('auto_join：VCが上手く取得できないので再接続を促すメッセージを追加する')
+            return
+
+        conf = GuildSetting.get_setting(ctx.guild.id)
+        watch_channel_id = conf['watch_channel_id']
+
+        _flg = watch_channel_id['voice'] == 0
+        if _flg:
+            watch_channel_id['voice'] = voice_state.channel.id
+            watch_channel_id['text'] = ctx.channel.id
+        else:
+            watch_channel_id['voice'] = 0
+            watch_channel_id['text'] = 0
+
+        print(conf)
+
+        GuildSetting.update_setting(ctx.guild.id, conf)
+
+        msg = f'{ctx.author.mention} '
+        msg += self.get_serif('auto_join_enable', voice_state.channel.name, ctx.channel.mention) if _flg else self.get_serif('auto_join_disable')
+        await ctx.channel.send(msg)
+
+    # ====== 動作関数群 ======
+    async def _join(
+            self, member: discord.Member,
+            channel: discord.TextChannel) -> None:
+        vc = self.get_guild_voice_client(member.guild.id)
+        if vc is None:
+            vc = await member.voice.channel.connect()
+            await vc.disconnect()
+            await member.voice.channel.connect()
+        elif vc != member.voice.channel:
+            await member.voice.channel.connect()
+
+        if self.target_channel is None or self.target_channel.id != channel.id:
+            await channel.send(
+                self.get_serif('start_reading', channel.mention))
+            self.target_channel = channel
+        else:
+            await channel.send(
+                self.get_serif('already_reading', channel.mention))
+
+    @commands.command()
+    async def join(self, ctx):
+        '''VCに私を呼ぶことができるわ'''
+        if ctx.author.voice is None:
+            await ctx.channel.send('私を呼ぶ時はVCに入った状態で呼んで')
+        await self._join(ctx.author, ctx.channel)
+
+    @commands.command(aliases=['exit'])
+    async def bye(self, ctx):
+        '''VCから私を切断することができるわ'''
+        vc = self.get_guild_voice_client(ctx.guild.id)
+        if vc is None:
+            await ctx.channel.send(f"VCにいないわ…\n私をVCに呼びたいときは`{Config.get_global()['prefix']}join`と入力して")
+            return
+
+        await ctx.message.add_reaction('👋')
+
+        await self._leave_voice_channel(ctx.guild.id)
+
+    @commands.command(aliases=['st'])
+    async def stop(self, ctx):
+        '''読み上げ中の音声を停止するわ'''
+        # 参加中のVCがなければメッセージを返す
+        vc = self.get_guild_voice_client(ctx.guild.id)
+        if vc is None:
+            await ctx.channel.send('何も喋ってないわ。作業に集中しましょ')
+            return
+
+        # 再生中なら止める
+        vc = self.get_guild_voice_client(ctx.guild.id)
+        if vc.is_playing():
+            await ctx.message.add_reaction('⏹')
+            vc.stop()
+
+    @commands.command(usage='読みを追加したい単語 読み', aliases=['word_add'])
+    async def wa(self, ctx, *args) -> None:
+        '''
+        単語の読みを登録することができるわ
+        -wa 単語 読み の形式で登録できるわ
+        '''
+        if len(args) == 2:
+            word = args[0]
+            read = args[1]
+            self.words[word] = read
+            self._update_word()
+            await ctx.channel.send(
+                self.get_serif('complete_word_add', word, read))
+        else:
+            await ctx.channel.send(
+                self.get_serif('error_word_add', ctx.prefix))
+            return
+
+    @commands.command(usage='読みを削除したい単語', aliases=['word_delete'])
+    async def wd(self, ctx, *args) -> None:
+        '''
+        単語の読みを削除することができるわ
+        -wd 単語 の形式で削除できるわ
+        '''
+        if len(args) == 1:
+            word = args[0]
+            del self.words[word]
+            self._update_word()
+            await ctx.channel.send(
+                self.get_serif('complete_word_delete', word))
+        else:
+            await ctx.channel.send(
+                self.get_serif('error_word_delete', ctx.prefix))
+            return
+
+    @commands.command(aliases=['word_list'])
+    async def wl(self, ctx) -> None:
+        '''登録されている単語の読み一覧を表示するわ'''
+        word_list = ['登録されている単語の一覧よ\n単語（読み）']
+        for (word, read) in self.words.items():
+            word_list.append(f'・{word}（{read}）')
+        await ctx.channel.send('\n'.join(word_list))
+
+    @commands.command(aliases=['sound_list'])
+    async def sl(self, ctx) -> None:
+        embed = discord.Embed(color=Config.get_global()['embed_color'])
+        embed.set_author(
+            name='登録されているサウンドの一覧',
+            icon_url=self.bot.user.avatar_url
+        )
+        embed.description = '単語：出典\n説明'
+        sounds = VoiceFactory.get_sound_list()
+        for v in sounds.values():
+            embed.add_field(
+                name=f"**{v['name']}**：{v['src']}",
+                value=f"{v['desc']}",
+                inline=False)
+        await ctx.channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(
+            self, member: discord.Member,
+            before: discord.VoiceState, after: discord.VoiceState):
+        # botは無視
+        if member.bot:
+            return
+        vc = self.get_guild_voice_client(member.guild.id)
+        # VCに接続済みの場合の動作
+        if vc is not None:
+            # 関係のないサーバーは無視
+            if member.guild != self.target_channel.guild:
+                return
+            # 参加者がbotのみになったら退出
+            if len([1 for user in vc.channel.members if not user.bot]) < 1:
+                await self._leave_voice_channel(member.guild.id)
+
+        # VCに未接続の場合の動作
+        else:
+            # ユーザーが通話を退出していたら処理をしない
+            if member.voice is None:
+                return
+
+            conf = GuildSetting.get_setting(member.guild.id)
+            watch_channel_id = conf['watch_channel_id']
+
+            # 接続したチャンネルが購読チャンネルでなければ処理をしない
+            if after.channel.id != watch_channel_id['voice']:
+                return
+
+            # self._check_guild_settings(member.guild.id)
+            # 自動参加チャンネルIDが設定されていたら接続する
+            channel_id = watch_channel_id['text']
+            if channel_id != 0:
+                try:
+                    _target_channel = await self.bot.fetch_channel(channel_id)
+                    # ※暫定対策のため、後ほど削除
+                    # 読み上げ対象のチャンネルが対象のサーバーでない場合は無視
+                    if _target_channel.guild != member.guild:
+                        return
+                except Exception:
+                    # TODO: auto_join設定者に対して再設定をうながす通知
+                    return
+                else:
+                    # VCに接続
+                    await self._join(member, _target_channel)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        # コマンドは読み上げない
+        if message.content.startswith(Config.get_global()["prefix"]):
+            return
+
+        # botの発言は読み上げない
+        if message.author.bot:
+            return
+
+        if self.target_channel != self.get_guild_voice_client(message.guild.id):
+            conf = GuildSetting.get_setting(message.guild.id)
+            channel_id = conf['watch_channel_id']['text']
+            self.target_channel = await self.bot.fetch_channel(channel_id)
+
+        # 読み上げ対象のチャンネル以外は読み上げない
+        if message.channel != self.target_channel:
+            return
+
+        vc = self.get_guild_voice_client(message.guild.id)
+        if vc is not None:
+            msg = self._convert_message(message.clean_content)
+            vf = await VoiceFactory.create_voice(msg, message.author.id)
+            if vf is None:
+                return
+            while vc.is_playing:
+                try:
+                    vc.play(
+                        discord.FFmpegPCMAudio(str(vf)),
+                        after=lambda e: vf.unlink())
+                    break
+                except discord.ClientException:
+                    await asyncio.sleep(0.2)
+
+    def get_serif(self, name: str, *args) -> str:
+        '''セリフを取得'''
+        if name not in self.serifs:
+            return ''
+
+        serif = self.serifs[name]
+        if len(args) < 1:
+            return serif
+        else:
+            replacements = {}
+            for i in range(len(args)):
+                replacements[f'${i}'] = args[i]
+
+            # NOTE: 参考URL
+            # https://arakan-pgm-ai.hatenablog.com/entry/2019/04/04/090000
+            return re.sub('({})'.format('|'.join(map(re.escape, replacements.keys()))), lambda m: replacements[m.group()], serif)
+
+    def get_guild_voice_client(self, guild_id: int) -> discord.VoiceClient:
+        '''サーバーで利用されているVoiceClientを取得する'''
+        if len(self.bot.voice_clients) < 1:
+            return None
+
+        clients = [x for x in self.bot.voice_clients if x.guild.id == guild_id]
+        if len(clients) < 1:
+            return None
+
+        # NOTE: 1つのサーバーに複数のVoiceClientが無い前提
+        return clients[0]
+
+
+def setup(bot):
+    bot.add_cog(VoiceReading(bot))
