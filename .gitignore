@@ -105,9 +105,9 @@ venv.bak/
 
 # データ
 data/json/*
-data/settings/user_setting.json
-data/settings/guild_setting.json
 !data/json/sound_links.json
+settings/guild_setting.json
+settings/user_setting.json
 
 # テスト
 test/*
