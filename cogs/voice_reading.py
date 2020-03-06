@@ -119,7 +119,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         await ctx.channel.send(
             content=self.get_serif(
                 "status_change", mention, status_ja, before, param
-                )
+            )
         )
 
     async def _show_user_setting(self, msg: discord.Message) -> None:
@@ -235,7 +235,8 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         GuildSetting.update_setting(ctx.guild.id, conf)
 
         msg = f'{ctx.author.mention} '
-        msg += self.get_serif('auto_join_enable', voice_state.channel.name, ctx.channel.mention) if _flg else self.get_serif('auto_join_disable')
+        msg += self.get_serif('auto_join_enable', voice_state.channel.name,
+                              ctx.channel.mention) if _flg else self.get_serif('auto_join_disable')
         await ctx.channel.send(msg)
 
     # ====== 動作関数群 ======
@@ -381,7 +382,6 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
             if after.channel.id != watch_channel_id['voice']:
                 return
 
-            # self._check_guild_settings(member.guild.id)
             # 自動参加チャンネルIDが設定されていたら接続する
             channel_id = watch_channel_id['text']
             if channel_id != 0:
@@ -451,15 +451,13 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
 
     def get_guild_voice_client(self, guild_id: int) -> discord.VoiceClient:
         '''サーバーで利用されているVoiceClientを取得する'''
-        if len(self.bot.voice_clients) < 1:
+        # ギルドの取得
+        guild = self.bot.get_guild(guild_id)
+        if guild is None:
             return None
 
-        clients = [x for x in self.bot.voice_clients if x.guild.id == guild_id]
-        if len(clients) < 1:
-            return None
-
-        # NOTE: 1つのサーバーに複数のVoiceClientが無い前提
-        return clients[0]
+        # ギルドに紐付いているVoiceClientを返却
+        return guild.voice_client
 
 
 def setup(bot):
