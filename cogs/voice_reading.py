@@ -32,7 +32,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         with self.sefifs_file.open() as f:
             self.serifs = json.loads(f.read())
 
-    async def _leave_voice_channel(self, guild_id: int):
+    async def leave_voice_channel(self, guild_id: int):
         await self.target_channel.send(self.get_serif("leave_voice_channel"))
         self.target_channel = None
         vc = self.get_guild_voice_client(guild_id)
@@ -269,7 +269,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
 
         await ctx.message.add_reaction('👋')
 
-        await self._leave_voice_channel(ctx.guild.id)
+        await self.leave_voice_channel(ctx.guild.id)
 
     @commands.command(aliases=['st'])
     async def stop(self, ctx):
@@ -360,7 +360,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
                 return
             # 参加者がbotのみになったら退出
             if len([1 for user in vc.channel.members if not user.bot]) < 1:
-                await self._leave_voice_channel(member.guild.id)
+                await self.leave_voice_channel(member.guild.id)
 
         # VCに未接続の場合の動作
         else:
