@@ -1,13 +1,10 @@
 import asyncio
 import json
 import re
-import random
-from copy import copy
 from pathlib import Path
 
 import discord
 import emoji
-import ffmpeg
 from discord.ext import commands
 
 from cogs.utils.msg_util import MessageConverter
@@ -244,11 +241,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
             self, member: discord.Member,
             channel: discord.TextChannel) -> None:
         vc = self.get_guild_voice_client(member.guild.id)
-        if vc is None:
-            vc = await member.voice.channel.connect()
-            await vc.disconnect()
-            await member.voice.channel.connect()
-        elif vc != member.voice.channel:
+        if vc != member.voice.channel:
             await member.voice.channel.connect()
 
         if self.target_channel is None or self.target_channel.id != channel.id:
