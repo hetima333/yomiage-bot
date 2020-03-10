@@ -29,7 +29,7 @@ class Lunalu(commands.Bot):
     # 起動時のイベント
     async def on_ready(self):
         print(f'Ready: {self.user} (ID: {self.user.id})')
-        activity = discord.Game(f'VC読み上げ')
+        activity = discord.Game(f'({self.command_prefix}) VC読み上げ')
         await self.change_presence(activity=activity)
 
     # Botを起動させる
