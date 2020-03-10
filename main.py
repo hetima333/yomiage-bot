@@ -8,14 +8,12 @@ from pathlib import Path
 from config import Config
 import extentions
 
-TOKEN = os.environ['DISCORD_BOT_TOKEN']
-
 
 # Botクラス
 class Lunalu(commands.Bot):
     def __init__(self):
         super().__init__(
-            command_prefix=Config.get_global()["prefix"],
+            command_prefix=Config.get_prefix(),
             fetch_offline_members=False
         )
 
@@ -34,7 +32,7 @@ class Lunalu(commands.Bot):
 
     # Botを起動させる
     def run(self):
-        super().run(TOKEN)
+        super().run(Config.get_token())
 
 
 # Botの作成
