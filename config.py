@@ -18,7 +18,7 @@ class Config():
 
     @classmethod
     def get_prefix(cls) -> str:
-        return os.environ['COMMAND_PREFIX']
+        return cls.get_global()['prefix']
 
     @classmethod
     def get_token(cls) -> str:
