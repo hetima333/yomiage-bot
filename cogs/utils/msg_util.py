@@ -12,6 +12,8 @@ class MessageConverter():
     # キャメルで単語ごとに区切られたローマ字を検索する
     re_roma = re.compile(r'[A-Z]?[a-z]{2,}')
 
+    words_file = Path('data/json/global_words.json')
+
     @classmethod
     def replace_eng_to_kana(cls, msg: str) -> str:
         '''
@@ -51,7 +53,6 @@ class MessageConverter():
         正規表現による置換を行なう
         '''
         _msg = msg
-        words_file = Path('data/json/global_words.json')
         with words_file.open() as f:
             words = json.loads(f.read())
         for k, v in words.items():

@@ -21,7 +21,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         # 読み上げる文字数
         self.read_char_cnt = 50
 
-        self.words_file = Path('./data/json/words.json')
+        self.words_file = Path('../lunalu-bot/data/json/words.json')
         if self.words_file.exists() is False:
             with self.words_file.open('w') as f:
                 f.write(r'{}')
