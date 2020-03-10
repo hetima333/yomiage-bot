@@ -264,7 +264,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         '''VCから私を切断することができるわ'''
         vc = self.get_guild_voice_client(ctx.guild.id)
         if vc is None:
-            await ctx.channel.send(f"VCにいないわ…\n私をVCに呼びたいときは`{Config.get_global()['prefix']}join`と入力して")
+            await ctx.channel.send(f"VCにいないわ…\n私をVCに呼びたいときは`{Config.get_prefix()}join`と入力して")
             return
 
         await ctx.message.add_reaction('👋')
@@ -394,7 +394,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         # コマンドは読み上げない
-        if message.content.startswith(Config.get_global()["prefix"]):
+        if message.content.startswith(Config.get_prefix()):
             return
 
         # botの発言は読み上げない

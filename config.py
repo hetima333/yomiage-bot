@@ -15,3 +15,11 @@ class Config():
         path = cls.CONFIG_PATH / "global.json"
         with path.open() as f:
             return json.loads(f.read())
+
+    @classmethod
+    def get_prefix(cls) -> str:
+        return os.environ['COMMAND_PREFIX']
+
+    @classmethod
+    def get_token(cls) -> str:
+        return os.environ['DISCORD_BOT_TOKEN']
