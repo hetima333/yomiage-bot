@@ -42,49 +42,24 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
 
     def _convert_message(
             self, msg: str, max_length=0) -> str:
-        re_url = re.compile(r'https?://([\w-]+\.)+[\w-]+(/[-\w ./?%&=#]*)?')
-        re_emoji = re.compile(r':(\w+):\d+')
-        re_newline = re.compile(r'\n')
-        re_code = re.compile(r'```.+```')
-        re_than = re.compile(r'^<(.+)>$')
-
         _msg = msg
-        _msg = re_url.sub('URL省略', _msg)
-        _msg = re_emoji.sub(r'\1', _msg)
-        _msg = re_than.sub(r'\1', _msg)
-        _msg = re_code.sub('コード省略', _msg)
         _msg = emoji.demojize(_msg)
-
-        # TODO: 自作辞書変換
-        # TODO: ファイルから読み込みたい
-        re_kusa = re.compile(r'w{2,}')
-        _msg = re_kusa.sub('わらわら', _msg)
-
-        # 英語かな変換
-        _msg = MessageConverter.replace_eng_to_kana(_msg)
-
-        # ローマ字かな変換
-        _msg = MessageConverter.replace_roman_to_kana(_msg)
-
-        # メッセージを小文字に変換
-        _msg = _msg.lower()
-
+        # 正規表現置換
+        _msg = MessageConverter.replace_by_re(_msg)
         # ユーザー辞書変換
         for (pre, post) in self.words.items():
             _pre = pre.lower()
             if _pre in _msg:
                 _msg = _msg.replace(_pre, post)
-
-        # TODO: ローマ字辞書変換
-
-        _msg = re_newline.sub(' ', _msg)
+        # 英語かな変換
+        _msg = MessageConverter.replace_eng_to_kana(_msg)
+        # ローマ字かな変換
+        _msg = MessageConverter.replace_roman_to_kana(_msg)
 
         # 長い文章はカットする
         if max_length != 0:
             if len(_msg) > max_length:
                 _msg = _msg[:max_length] + '以下略'
-
-        print(_msg)
 
         return _msg
 
@@ -293,12 +268,13 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         -wa 単語 読み の形式で登録できるわ
         '''
         if len(args) == 2:
-            word = args[0]
-            read = args[1]
+            de_custom_emoji = re.compile(r"<:(\w+):\d+>")
+            word = de_custom_emoji.sub(r'\1', args[0])
+            read = de_custom_emoji.sub(r'\1', args[1])
             self.words[word] = read
             self._update_word()
             await ctx.channel.send(
-                self.get_serif('complete_word_add', word, read))
+                self.get_serif('complete_word_add', args[0], read))
         else:
             await ctx.channel.send(
                 self.get_serif('error_word_add', ctx.prefix))
@@ -311,11 +287,12 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         -wd 単語 の形式で削除できるわ
         '''
         if len(args) == 1:
-            word = args[0]
+            de_custom_emoji = re.compile(r"<:(\w+):\d+>")
+            word = de_custom_emoji.sub(r'\1', args[0])
             del self.words[word]
             self._update_word()
             await ctx.channel.send(
-                self.get_serif('complete_word_delete', word))
+                self.get_serif('complete_word_delete', args[0]))
         else:
             await ctx.channel.send(
                 self.get_serif('error_word_delete', ctx.prefix))

@@ -107,6 +107,7 @@ venv.bak/
 data/json/*
 !data/json/serifs.json
 !data/json/sound_links.json
+!data/json/global_words.json
 settings/guild_setting.json
 settings/user_setting.json
 

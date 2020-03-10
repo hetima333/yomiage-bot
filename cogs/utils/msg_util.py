@@ -1,4 +1,6 @@
 import re
+import json
+from pathlib import Path
 
 import alkana
 import romkan
@@ -48,4 +50,11 @@ class MessageConverter():
         '''
         正規表現による置換を行なう
         '''
-        pass
+        _msg = msg
+        words_file = Path('data/json/global_words.json')
+        with words_file.open() as f:
+            words = json.loads(f.read())
+        for k, v in words.items():
+            _msg = re.sub(k, v, _msg)
+
+        return _msg
