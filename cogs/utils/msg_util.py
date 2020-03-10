@@ -53,7 +53,7 @@ class MessageConverter():
         正規表現による置換を行なう
         '''
         _msg = msg
-        with words_file.open() as f:
+        with cls.words_file.open() as f:
             words = json.loads(f.read())
         for k, v in words.items():
             _msg = re.sub(k, v, _msg)
