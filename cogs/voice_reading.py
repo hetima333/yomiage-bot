@@ -329,20 +329,26 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         # botは無視
         if member.bot:
             return
+
+        # 移動していない（ミュート状態の切り替えなど）なら無視
+        if before.channel == after.channel:
+            return
+
+        # 関係のないサーバーは無視
+        if member.guild != self.target_channel.guild:
+            return
+
         vc = self.get_guild_voice_client(member.guild.id)
         # VCに接続済みの場合の動作
         if vc is not None:
-            # 関係のないサーバーは無視
-            if member.guild != self.target_channel.guild:
-                return
             # 参加者がbotのみになったら退出
             if len([1 for user in vc.channel.members if not user.bot]) < 1:
                 await self.leave_voice_channel(member.guild.id)
 
         # VCに未接続の場合の動作
         else:
-            # ユーザーが通話を退出していたら処理をしない
-            if member.voice is None:
+            # 接続チャンネルがなければ無視
+            if after.channel is None:
                 return
 
             conf = GuildSetting.get_setting(member.guild.id)
