@@ -142,7 +142,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         ・male
         ・miku
         '''
-        if name not in VoiceFactory.VOICES:
+        if name not in VoiceFactory.get_voice_list():
             await ctx.channel.send(self.get_serif('voice_not_exist', ctx.author.mention))
             return
         await self._update_status_and_send_msg(

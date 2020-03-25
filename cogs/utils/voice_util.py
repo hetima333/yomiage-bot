@@ -16,15 +16,7 @@ class VoiceFactory():
     DICT_DIR = Path(os.environ['DIC_DIR'])
     SYS_VOICE_DIR = Path(os.environ['SYS_VOICE_DIR'])
     SOUND_LINK_FILE = Path('../lunalu-bot/data/json/sound_links.json')
-    VOICES = {
-        'normal': SYS_VOICE_DIR / 'mei/mei_normal.htsvoice',
-        'happy': SYS_VOICE_DIR / 'mei/mei_happy.htsvoice',
-        'bashful': SYS_VOICE_DIR / 'mei/mei_bashful.htsvoice',
-        'angry': SYS_VOICE_DIR / 'mei/mei_angry.htsvoice',
-        'sad': SYS_VOICE_DIR / 'mei/mei_sad.htsvoice',
-        'male': SYS_VOICE_DIR / 'm100/nitech_jp_atr503_m001.htsvoice',
-        'miku': SYS_VOICE_DIR / 'miku/miku.htsvoice',
-    }
+    VOICE_LINK_FILE = Path('../lunalu-bot/data/json/voice_links.json')
 
     @classmethod
     def get_user_setting(cls, user_id: int) -> dict:
@@ -51,6 +43,13 @@ class VoiceFactory():
             sounds = json.loads(f.read())
 
         return sounds
+
+    @classmethod
+    def get_voice_list(cls) -> dict:
+        with cls.VOICE_LINK_FILE.open() as f:
+            voices = json.loads(f.read())
+
+        return voices
 
     @classmethod
     async def create_voice(cls, msg: str, user_id: int) -> Path:
@@ -94,11 +93,13 @@ class VoiceFactory():
         file_name = f'voice_{ftime}'
         file_path = cls.TEMP_DIR / f'{file_name}.wav'
 
-        voice_file = cls.VOICES[setting['voice']]
+        with cls.VOICE_LINK_FILE.open() as f:
+            voice_file = json.loads(f.read())
+
         cmd = [
             'open_jtalk',
             '-x', str(cls.DICT_DIR),
-            '-m', str(voice_file),
+            '-m', str(cls.SYS_VOICE_DIR / f"{voice_file[setting['voice']]}.htsvoice"),
             '-ow', str(file_path),
             '-r', str(setting['speed']),
             '-fm', str(setting['tone']),
