@@ -29,7 +29,7 @@ class GuildSetting():
 
 
 class UserSetting():
-    USER_PATH = SETTING_PATH / "user_setting.json"
+    USER_PATH = "../lunalu-bot" / SETTING_PATH / "user_setting.json"
 
     @classmethod
     def get_all_settings(cls) -> dict:
