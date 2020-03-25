@@ -47,9 +47,9 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         _msg = MessageConverter.replace_by_re(_msg)
         # ユーザー辞書変換
         for (pre, post) in self.words.items():
-            _pre = pre.lower()
-            if _pre in _msg:
-                _msg = _msg.replace(_pre, post)
+            # _pre = pre.lower()
+            if pre in _msg:
+                _msg = _msg.replace(pre, post)
         _msg = emoji.demojize(_msg)
         # 英語かな変換
         _msg = MessageConverter.replace_eng_to_kana(_msg)
