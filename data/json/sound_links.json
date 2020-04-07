@@ -88,5 +88,11 @@
 		"desc": "戌亥とこ",
 		"src": "戌亥とこ",
 		"link": "https://cdn.discordapp.com/attachments/475975692195201034/682620242215567370/a54d32a25c6bde49.mp3"
+	},
+	"(行|い)け(!|！)?": {
+		"name": "行け！",
+		"desc": "ルナール",
+		"src": "ルナール",
+		"link": "https://cdn.discordapp.com/attachments/679877197393166343/696709382787825685/d4d2a7e96f0b4ee5.mp3"
 	}
 }
