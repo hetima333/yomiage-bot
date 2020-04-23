@@ -308,19 +308,12 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
 
     @commands.command(aliases=['sound_list'])
     async def sl(self, ctx) -> None:
-        embed = discord.Embed(color=Config.get_global()['embed_color'])
-        embed.set_author(
-            name='登録されているサウンドの一覧',
-            icon_url=self.bot.user.avatar_url
-        )
-        embed.description = '単語：出典\n説明'
+        msg = f"{self.get_serif('show_sound_list')}\n```"
         sounds = VoiceFactory.get_sound_list()
         for v in sounds.values():
-            embed.add_field(
-                name=f"**{v['name']}**：{v['src']}",
-                value=f"{v['desc']}",
-                inline=False)
-        await ctx.channel.send(embed=embed)
+            msg += f"・{v['name']}\n"
+        msg += "```"
+        await ctx.channel.send(msg)
 
     @commands.Cog.listener()
     async def on_voice_state_update(
