@@ -306,7 +306,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
     @commands.command(aliases=['word_list'])
     async def wl(self, ctx) -> None:
         '''登録されている単語の読み一覧を表示するわ'''
-        word_list = ['登録されている単語の一覧よ\n単語（読み）']
+        word_list = [f"{self.get_serif('show_word_list')}\n単語（読み）"]
         self._load_words()
         for (word, read) in self.words.items():
             word_list.append(f'・{word}（{read}）')
