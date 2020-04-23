@@ -11,5 +11,6 @@
 	"status_change": "$0 $1を`$2`から`$3`に変更したわ",
 	"show_user_status": "$0 今のあなたの読み上げ設定よ",
 	"voice_not_exist": "$0 その名前のボイスは存在しないわ",
-	"show_sound_list": "登録されているサウンドの一覧よ"
+	"show_sound_list": "登録されているサウンドの一覧よ",
+	"show_word_list": "登録されている読みの一覧よ"
 }
