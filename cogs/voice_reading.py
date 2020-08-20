@@ -397,7 +397,8 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
             vf = await VoiceFactory.create_voice(msg, message.author.id)
             if vf is None:
                 return
-            while vc.is_playing:
+            # 一定時間だけ再生を試みる
+            for _ in range(600):
                 try:
                     vc.play(
                         discord.FFmpegPCMAudio(str(vf)),
@@ -405,6 +406,10 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
                     break
                 except discord.ClientException:
                     await asyncio.sleep(0.2)
+            else:
+                print(f"Play canceled : {message.clean_content}")
+                vf.unlink()
+                # await self.target_channel.send("長い文章を読み上げているから読み上げをやめるわ")
 
     def get_serif(self, name: str, *args) -> str:
         '''セリフを取得'''
