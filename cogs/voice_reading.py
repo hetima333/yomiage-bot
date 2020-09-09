@@ -314,11 +314,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
 
     @commands.command(aliases=['sound_list'])
     async def sl(self, ctx) -> None:
-        msg = f"{self.get_serif('show_sound_list')}\n```"
-        sounds = VoiceFactory.get_sound_list()
-        for v in sounds.values():
-            msg += f"・{v['name']}\n"
-        msg += "```"
+        msg = "音源はこのスプレッドシートに記載されているわ\nhttps://discordapp.com/channels/685820548579590187/685878131189743772/753196521889071117"
         await ctx.channel.send(msg)
 
     @commands.Cog.listener()
