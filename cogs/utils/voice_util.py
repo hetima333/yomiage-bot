@@ -56,8 +56,8 @@ class VoiceFactory():
         with cls.SOUND_LINK_FILE.open() as f:
             sounds = json.loads(f.read())
 
-        for k, v in sounds.items():
-            r = re.fullmatch(f"^{k}$", msg)
+        for v in sounds:
+            r = re.fullmatch(f"^{v['reg']}$", msg)
             if r is not None:
                 return await cls.create_voice_from_url(v['link'])
 
