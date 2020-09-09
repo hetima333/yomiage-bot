@@ -314,7 +314,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
 
     @commands.command(aliases=['sound_list'])
     async def sl(self, ctx) -> None:
-        msg = "音源はこのスプレッドシートに記載されているわ\nhttps://discordapp.com/channels/685820548579590187/685878131189743772/753196521889071117"
+        msg = "音源はこのスプレッドシートに記載されているわ\nhttps://docs.google.com/spreadsheets/d/1_P_o1PGRqv_8Wdcpqj_Nd9rd-cRohsolUMuENbAxVi8/edit?usp=sharing"
         await ctx.channel.send(msg)
 
     @commands.Cog.listener()
