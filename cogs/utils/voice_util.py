@@ -17,6 +17,7 @@ class VoiceFactory():
     SYS_VOICE_DIR = Path(os.environ['SYS_VOICE_DIR'])
     SOUND_LINK_FILE = Path('../lunalu-bot/data/json/sound_links.json')
     VOICE_LINK_FILE = Path('../lunalu-bot/data/json/voice_links.json')
+    SOUND_LOG_FILE = Path('../lunalu-bot/data/json/sound_log.json')
 
     @classmethod
     def get_user_setting(cls, user_id: int) -> dict:
@@ -59,6 +60,16 @@ class VoiceFactory():
         for v in sounds:
             r = re.fullmatch(f"^{v['reg']}$", msg)
             if r is not None:
+                # 語録使用回数を追加
+                # ファイルを開く
+                with cls.SOUND_LOG_FILE.open() as f:
+                    logs = json.loads(f.read())
+                counts = logs['user_data'].get(str(user_id), [0] * logs['sound_count'])
+                counts[int(v['id'])] = counts[int(v['id'])] + 1
+                logs['user_data'][str(user_id)] = counts
+                # 回数を更新して上書き
+                with cls.SOUND_LOG_FILE.open('w') as f:
+                    f.write(json.dumps(logs))
                 return await cls.create_voice_from_url(v['link'])
 
         return await cls.create_voice_from_openjtalk(msg, user_id)
