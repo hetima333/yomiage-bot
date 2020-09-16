@@ -65,7 +65,9 @@ class VoiceFactory():
                 with cls.SOUND_LOG_FILE.open() as f:
                     logs = json.loads(f.read())
                 counts = logs['user_data'].get(str(user_id), [0] * logs['sound_count'])
-                counts[int(v['id'])] = counts[int(v['id'])] + 1
+                # IDは1から開始しているため-1する
+                sound_id = int(v['id']) - 1
+                counts[sound_id] = counts[sound_id] + 1
                 logs['user_data'][str(user_id)] = counts
                 # 回数を更新して上書き
                 with cls.SOUND_LOG_FILE.open('w') as f:
