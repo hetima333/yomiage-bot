@@ -57,6 +57,9 @@ class VoiceFactory():
         with cls.SOUND_LINK_FILE.open() as f:
             sounds = json.loads(f.read())
 
+        # 全角チルダを波ダッシュに置換
+        msg = msg.replace("〜", "〜")
+
         for v in sounds:
             r = re.fullmatch(f"{v['reg']}", msg, re.I)
             if r is not None:
