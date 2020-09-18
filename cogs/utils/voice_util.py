@@ -58,7 +58,7 @@ class VoiceFactory():
             sounds = json.loads(f.read())
 
         for v in sounds:
-            r = re.fullmatch(f"^{v['reg']}$", msg)
+            r = re.fullmatch(f"{v['reg']}", msg, re.I)
             if r is not None:
                 # 語録使用回数を追加
                 # ファイルを開く
