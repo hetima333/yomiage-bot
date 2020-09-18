@@ -58,7 +58,7 @@ class VoiceFactory():
             sounds = json.loads(f.read())
 
         # 全角チルダを波ダッシュに置換
-        msg = msg.replace(u'ff5e', u'301c')
+        msg = msg.replace('\uff5e', '\u301c')
 
         for v in sounds:
             r = re.fullmatch(f"{v['reg']}", msg, re.I)
