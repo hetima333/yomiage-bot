@@ -4,6 +4,7 @@ import time
 import os
 import json
 import re
+import random
 import subprocess
 from copy import copy
 from pathlib import Path
@@ -75,7 +76,13 @@ class VoiceFactory():
                 # 回数を更新して上書き
                 with cls.SOUND_LOG_FILE.open('w') as f:
                     f.write(json.dumps(logs))
-                return await cls.create_voice_from_url(v['link'])
+
+                # もし改行が含まれていたらランダムで選択する
+                link = v['links']
+                links = re.findall(r'^http.*$', link, re.M)
+                if len(links) > 1:
+                    link = random.choice(links)
+                return await cls.create_voice_from_url(link)
 
         return await cls.create_voice_from_openjtalk(msg, user_id)
 
