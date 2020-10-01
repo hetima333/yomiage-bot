@@ -374,9 +374,6 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         if message.content.startswith(Config.get_prefix()):
             return
 
-        if message.content.startswith('='):
-            return
-
         # botの発言は読み上げない
         if message.author.bot:
             return
@@ -393,6 +390,8 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         vc = self.get_guild_voice_client(message.guild.id)
         if vc is not None:
             msg = self._convert_message(message.clean_content)
+            if message.content.startswith('=sc'):
+                msg = f"{message.author.display_name}さんがスパチャしました。{msg}"
             vf = await VoiceFactory.create_voice(msg, message.author.id)
             if vf is None:
                 return
