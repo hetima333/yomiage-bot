@@ -374,6 +374,9 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         if message.content.startswith(Config.get_prefix()):
             return
 
+        if message.content.startswith('='):
+            return
+
         # botの発言は読み上げない
         if message.author.bot:
             return
