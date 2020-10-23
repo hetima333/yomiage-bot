@@ -314,6 +314,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
 
     @commands.command(aliases=['sound_list'])
     async def sl(self, ctx) -> None:
+        '''登録されているサウンド一覧を表示するわ'''
         msg = "音源はこのスプレッドシートに記載されているわ\nhttps://docs.google.com/spreadsheets/d/1_P_o1PGRqv_8Wdcpqj_Nd9rd-cRohsolUMuENbAxVi8/edit?usp=sharing"
         await ctx.channel.send(msg)
 
@@ -322,8 +323,8 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
             self, member: discord.Member,
             before: discord.VoiceState, after: discord.VoiceState):
         # botは無視
-        if member.bot:
-            return
+        # if member.bot:
+        #     return
 
         # 移動していない（ミュート状態の切り替えなど）なら無視
         if before.channel == after.channel:
