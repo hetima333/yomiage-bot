@@ -323,8 +323,8 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
             self, member: discord.Member,
             before: discord.VoiceState, after: discord.VoiceState):
         # botは無視
-        # if member.bot:
-        #     return
+        if member.bot:
+            return
 
         # 移動していない（ミュート状態の切り替えなど）なら無視
         if before.channel == after.channel:
