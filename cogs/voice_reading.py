@@ -393,7 +393,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
             msg = message.clean_content
             if message.content.startswith('=sc '):
                 msg = f"{message.author.display_name}さんがスパチャしました。{msg[4:]}"
-            msg = self._convert_message(msg)
+            msg = self._convert_message(msg, self.read_char_cnt)
             vf = await VoiceFactory.create_voice(msg, message.author.id)
             if vf is None:
                 return
