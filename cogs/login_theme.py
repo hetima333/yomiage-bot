@@ -1,4 +1,5 @@
 import asyncio
+import re
 
 from discord.ext import commands
 import discord
@@ -9,6 +10,7 @@ from cogs.utils.voice_util import VoiceFactory
 class LoginTheme(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.URL_REG = re.compile(r"https?://[\\w!\\?/\\+\\-_~=;\\.,\\*&@#\\$%\\(\\)'\\[\\]]+")
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -66,6 +68,9 @@ class LoginTheme(commands.Cog):
 
     @theme.command(aliases=['ch'])
     async def change(self, ctx, url: str):
+        result = self.URL_REG.search(url)
+        if result is None:
+            return
         # メンションが含まれていなければ、メッセージ送信者のidを入れる
         if len(ctx.message.mentions) > 0:
             user_id = ctx.message.mentions[0].id
