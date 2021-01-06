@@ -5,6 +5,7 @@
         "tone": 50.0,
         "intone": 50.0,
         "threshold": 50.0,
-        "volume": 50.0
+        "volume": 50.0,
+        "theme": {}
     }
 }

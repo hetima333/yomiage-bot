@@ -2,4 +2,5 @@
 # cogs.は記述不要
 extentions = (
     'voice_reading',
+    'login_theme'
 )
