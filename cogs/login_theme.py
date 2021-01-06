@@ -25,7 +25,7 @@ class LoginTheme(commands.Cog):
             return
 
         # 退席なら無視
-        if after.channel is None:
+        if before.channel is None:
             return
 
         guild = self.bot.get_guild(member.guild.id)
