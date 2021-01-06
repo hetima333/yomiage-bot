@@ -68,9 +68,9 @@ class LoginTheme(commands.Cog):
 
     @theme.command(aliases=['ch'])
     async def change(self, ctx, url: str):
-        result = self.URL_REG.search(url)
-        if result is None:
-            return
+        # result = self.URL_REG.search(url)
+        # if result is None:
+        #     return
         # メンションが含まれていなければ、メッセージ送信者のidを入れる
         if len(ctx.message.mentions) > 0:
             user_id = ctx.message.mentions[0].id
