@@ -79,9 +79,9 @@ class LoginTheme(commands.Cog):
             user_id = ctx.author.id
 
         # user_idを持ったユーザーがギルド内に存在するかチェックする
-        member = ctx.message.guild.get_member(user_id)
-        if member is None:
-            return
+        # member = ctx.message.guild.get_member(user_id)
+        # if member is None:
+        #     return
 
         # メッセージ送信者がそれ以外の人の設定を変更しようとしている場合の権限チェック
         if user_id != ctx.author.id:
