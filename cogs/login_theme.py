@@ -10,7 +10,7 @@ from cogs.utils.voice_util import VoiceFactory
 class LoginTheme(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.URL_REG = re.compile(r"https?://[\\w!\\?/\\+\\-_~=;\\.,\\*&@#\\$%\\(\\)'\\[\\]]+")
+        self.URL_REG = re.compile("https?://[\\w!\\?/\\+\\-_~=;\\.,\\*&@#\\$%\\(\\)'\\[\\]]+")
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -67,10 +67,11 @@ class LoginTheme(commands.Cog):
         pass
 
     @theme.command(aliases=['ch'])
-    async def change(self, ctx, url: str):
-        # result = self.URL_REG.search(url)
-        # if result is None:
-        #     return
+    async def change(self, ctx):
+        url = self.URL_REG.search(ctx.message.clean_content)
+        if url is None:
+            await ctx.send(f"{ctx.author.mention} URLが含まれていないわ。もう一度確認してみて")
+            return
         # メンションが含まれていなければ、メッセージ送信者のidを入れる
         if len(ctx.message.mentions) > 0:
             user_id = ctx.message.mentions[0].id
@@ -85,6 +86,7 @@ class LoginTheme(commands.Cog):
         # メッセージ送信者がそれ以外の人の設定を変更しようとしている場合の権限チェック
         if user_id != ctx.author.id:
             if member.guild_permissions.manage_nicknames is False:
+                await ctx.send(f"{ctx.author.mention} テーマの変更権限がないわ。本人か権利者に変更してもらって")
                 return
         
         # 受け取ったURLが音声ファイルならテーマファイルとして設定する
@@ -96,7 +98,7 @@ class LoginTheme(commands.Cog):
             data["theme"] = {str(guild_id): url}
         UserSetting.update(user_id, data)
 
-        await ctx.send(f"{member.display_name} さんのテーマを設定したわ")
+        await ctx.send(f"{ctx.author.mention} {member.display_name} さんのテーマを設定したわ")
 
     def __get_user_theme(self, user_id: int, guild_id: int):
         data = UserSetting.get_setting(user_id)
