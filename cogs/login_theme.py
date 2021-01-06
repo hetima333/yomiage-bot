@@ -91,6 +91,8 @@ class LoginTheme(commands.Cog):
             data["theme"] = {str(guild_id): url}
         UserSetting.update(user_id, data)
 
+        await ctx.send(f"{member.display_name} さんのテーマを設定したわ")
+
     def __get_user_theme(self, user_id: int, guild_id: int):
         data = UserSetting.get_setting(user_id)
         if "theme" not in data:
