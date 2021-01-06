@@ -93,6 +93,8 @@ class LoginTheme(commands.Cog):
 
     def __get_user_theme(self, user_id: int, guild_id: int):
         data = UserSetting.get_setting(user_id)
+        if "theme" not in data:
+            return None
         return data["theme"].get(str(guild_id), None)
 
     async def __fetch_user_theme(self, user_id: int, guild_id: int):
