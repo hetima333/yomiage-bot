@@ -68,10 +68,11 @@ class LoginTheme(commands.Cog):
 
     @theme.command(aliases=['ch'])
     async def change(self, ctx):
-        url = self.URL_REG.search(ctx.message.clean_content)
-        if url is None:
+        result = self.URL_REG.search(ctx.message.clean_content)
+        if result is None:
             await ctx.send(f"{ctx.author.mention} URLが含まれていないわ。もう一度確認してみて")
             return
+        url = result.group()
         # メンションが含まれていなければ、メッセージ送信者のidを入れる
         if len(ctx.message.mentions) > 0:
             user_id = ctx.message.mentions[0].id
@@ -79,9 +80,10 @@ class LoginTheme(commands.Cog):
             user_id = ctx.author.id
 
         # user_idを持ったユーザーがギルド内に存在するかチェックする
-        # member = ctx.message.guild.get_member(user_id)
-        # if member is None:
-        #     return
+        try:
+            member = await ctx.message.guild.fetch_member(user_id)
+        except Exception:
+            return
 
         # メッセージ送信者がそれ以外の人の設定を変更しようとしている場合の権限チェック
         if user_id != ctx.author.id:
@@ -92,10 +94,13 @@ class LoginTheme(commands.Cog):
         # 受け取ったURLが音声ファイルならテーマファイルとして設定する
         guild_id = ctx.message.guild.id
         data = UserSetting.get_setting(user_id)
+        print(data)
         if "theme" in data:
             data["theme"][str(guild_id)] = url
         else:
             data["theme"] = {str(guild_id): url}
+
+        print(data)
         UserSetting.update(user_id, data)
 
         await ctx.send(f"{ctx.author.mention} {member.display_name} さんのテーマを設定したわ")
