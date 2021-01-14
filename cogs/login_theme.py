@@ -87,7 +87,7 @@ class LoginTheme(commands.Cog):
 
         # メッセージ送信者がそれ以外の人の設定を変更しようとしている場合の権限チェック
         if user_id != ctx.author.id:
-            if member.guild_permissions.manage_nicknames is False:
+            if ctx.author.guild_permissions.manage_nicknames is False:
                 await ctx.send(f"{ctx.author.mention} テーマの変更権限がないわ。本人か権利者に変更してもらって")
                 return
         
