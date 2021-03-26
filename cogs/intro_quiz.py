@@ -6,6 +6,7 @@ import discord
 
 import youtube_dl
 from pydub import AudioSegment
+from pydub.utils import ratio_to_db
 
 class IntroQuiz(commands.Cog):
     def __init__(self, bot):
@@ -41,7 +42,6 @@ class IntroQuiz(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         emoji = str(payload.emoji)
-        print(emoji)
         # 開始絵文字以外は無視
         if emoji not in self.trigger_emojis:
             return
@@ -97,6 +97,8 @@ class IntroQuiz(commands.Cog):
         sound = AudioSegment.from_file("data/input.mp3", "mp3")
         # 0~5秒を抽出
         sound = sound[0:5000]
+        # 音量調整
+        sound = sound + ratio_to_db(2100 / sound.rms)
         # フェードイン（0.5秒）、フェードアウト（0.5秒）
         sound = sound.fade_in(500).fade_out(500)
         # 保存
