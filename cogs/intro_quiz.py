@@ -31,7 +31,13 @@ class IntroQuiz(commands.Cog):
             return
 
     @intro.command()
-    async def start(self, ctx):
+    async def test(self, ctx, *, arg: str = "all"):
+        _arg = arg.replace(' ', '')
+        print(_arg)
+
+    @intro.command()
+    async def start(self, ctx, *, arg: str = "all"):
+        _arg = arg.replace(' ', '')
         message = await ctx.message.reply(f"イントロクイズを開始するわ。\n{self.operation}")
         self.message_id = message.id
         for item in self.trigger_emojis:
@@ -40,9 +46,12 @@ class IntroQuiz(commands.Cog):
         # jsonからデータを読み込む
         with self.INTRO_DATA_FILE.open() as f:
             intro_data = json.loads(f.read())
-        # TODO: 必要なデータだけを抽出する
-        self.intro_list = intro_data
 
+        # 必要なデータだけを抽出する
+        if _arg != "all":
+            self.intro_list = [s for s in intro_data if _arg in s['tags']]
+        else:
+            self.intro_list = intro_data
         random.shuffle(self.intro_list)
         self.pos = 0
 
