@@ -6,11 +6,18 @@ from discord.ext import commands
 import discord
 import youtube_dl
 
+from enum import Enum
+
 from pathlib import Path
 from pydub import AudioSegment
 from pydub.utils import ratio_to_db
 
 from config import Config
+
+
+class DownloadStatus(Enum):
+    Idle = 0
+    Downloading = 1
 
 
 class IntroQuiz(commands.Cog):
@@ -25,15 +32,12 @@ class IntroQuiz(commands.Cog):
         self.pos = 0
         self.operation = "**操作説明**\nこのメッセージにスタンプを押すことで操作できるわ。\n🔁でもう一度再生、➡で次の問題へ"
 
+        self.current_status = DownloadStatus.Idle
+
     @commands.group()
     async def intro(self, ctx):
         if ctx.invoked_subcommand is None:
             return
-
-    @intro.command()
-    async def test(self, ctx, *, arg: str = "all"):
-        _arg = arg.replace(' ', '')
-        print(_arg)
 
     @intro.command()
     async def start(self, ctx, *, arg: str = "all"):
@@ -60,6 +64,10 @@ class IntroQuiz(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
+        # ダウンロード中なら無視する
+        if self.current_status == DownloadStatus.Idle:
+            return
+
         emoji = str(payload.emoji)
         # 開始絵文字以外は無視
         if emoji not in self.trigger_emojis:
@@ -76,6 +84,9 @@ class IntroQuiz(commands.Cog):
         if message.id != self.message_id:
             return
 
+        # ステータスをダウンロード中にする
+        self.current_status = DownloadStatus.Downloading
+
         if emoji == "🔁":
             await self.__play_intro(message.guild.id)
 
@@ -89,6 +100,9 @@ class IntroQuiz(commands.Cog):
                 self.pos += 1
                 await self.__download_music(self.intro_list[self.pos]["url"])
                 await self.__play_intro(message.guild.id)
+
+        # ステータスをアイドルにする
+        self.current_status = DownloadStatus.Idle
 
         member = message.guild.get_member(payload.user_id)
         if member is not None:
