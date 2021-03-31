@@ -42,7 +42,8 @@ class IntroQuiz(commands.Cog):
     @intro.command()
     async def start(self, ctx, *, arg: str = "all"):
         _arg = arg.replace(' ', '')
-        message = await ctx.message.reply(f"イントロクイズを開始するわ。\n{self.operation}")
+        message = await ctx.message.reply(
+            f"イントロクイズを開始するわ。（全{len(self.intro_list)}問）\n{self.operation}")
         self.message_id = message.id
         for item in self.trigger_emojis:
             await message.add_reaction(item)
@@ -96,7 +97,7 @@ class IntroQuiz(commands.Cog):
                     content=f'問題は全て終了したわ。お疲れ様。\n{self.intro_list[self.pos]["url"]}\n{self.operation}')
             else:
                 await message.edit(
-                    content=f'正解はこれよ。\n{self.intro_list[self.pos]["url"]}\n{self.operation}')
+                    content=f'正解はこれよ。（{self.pos+1}/{len(self.intro_list)}問）\n{self.intro_list[self.pos]["url"]}\n{self.operation}')
                 self.pos += 1
                 await self.__download_music(self.intro_list[self.pos]["url"])
                 await self.__play_intro(message.guild.id)
