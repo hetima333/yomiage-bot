@@ -3,5 +3,4 @@
 extentions = (
     'voice_reading',
     'login_theme',
-    'intro_quiz'
 )
