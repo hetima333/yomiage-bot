@@ -111,9 +111,5 @@ data/json/*
 settings/guild_setting.json
 settings/user_setting.json
 
-# イントロ用
-data/output.mp3
-data/input.mp3
-
 # テスト
 test/*
