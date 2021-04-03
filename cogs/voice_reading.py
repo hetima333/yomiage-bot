@@ -18,6 +18,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
     def __init__(self, bot):
         self.bot = bot
         self.target_channel = None
+        self.voice_client = None
         # 読み上げる文字数
         self.read_char_cnt = 50
 
@@ -32,13 +33,18 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         with self.sefifs_file.open() as f:
             self.serifs = json.loads(f.read())
 
-    async def leave_voice_channel(self, guild_id: int):
+    async def __leave_voice_channel(self):
+        # VoiceClientが空なら処理しない
+        if self.voice_client is None:
+            return
+
+        # VCに接続していたら切断する
+        if self.voice_client.is_connected():
+            await self.voice_client.disconnect()
+        self.voice_client = None
+
         await self.target_channel.send(self.get_serif("leave_voice_channel"))
         self.target_channel = None
-        vc = self.get_guild_voice_client(guild_id)
-        if vc is None:
-            return
-        await vc.disconnect()
 
     def _convert_message(
             self, msg: str, max_length=0) -> str:
@@ -217,54 +223,60 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         await ctx.channel.send(msg)
 
     # ====== 動作関数群 ======
-    async def _join(
-            self, member: discord.Member,
-            channel: discord.TextChannel) -> None:
-        vc = self.get_guild_voice_client(member.guild.id)
-        if vc != member.voice.channel:
-            await member.voice.channel.connect()
+    async def __join(
+            self,
+            text_channel: discord.TextChannel,
+            voice_channel: discord.VoiceChannel) -> None:
+        # VoiceClientが空またはVCに未接続なら接続
+        if self.voice_client is None:
+            self.voice_client = await voice_channel.connect()
+        if self.voice_client.is_connected() is False:
+            await self.voice_client.connect(timeout=3000, reconnect=False)
 
-        if self.target_channel is None or self.target_channel.id != channel.id:
-            await channel.send(
-                self.get_serif('start_reading', channel.mention))
-            self.target_channel = channel
-        else:
-            await channel.send(
-                self.get_serif('already_reading', channel.mention))
+        if self.target_channel is None or\
+                self.target_channel.id != text_channel.id:
+            await text_channel.send(
+                self.get_serif('start_reading', text_channel.mention))
+            self.target_channel = text_channel
+        # else:
+        #     await text_channel.send(
+        #         self.get_serif('already_reading', text_channel.mention))
 
     @commands.command()
     async def join(self, ctx):
         '''VCに私を呼ぶことができるわ'''
         if ctx.author.voice is None:
             await ctx.channel.send('私を呼ぶ時はVCに入った状態で呼んで')
-        await self._join(ctx.author, ctx.channel)
+        else:
+            await self.__join(ctx.channel, ctx.author.voice.channel)
 
     @commands.command(aliases=['exit'])
     async def bye(self, ctx):
         '''VCから私を切断することができるわ'''
-        vc = self.get_guild_voice_client(ctx.guild.id)
-        if vc is None:
+        # VoiceClientが空またはVCに未接続ならエラーメッセージ
+        if self.voice_client is None:
+            return
+
+        if self.voice_client.is_connected() is False:
             await ctx.channel.send(f"VCにいないわ…\n私をVCに呼びたいときは`{Config.get_prefix()}join`と入力して")
             return
 
         await ctx.message.add_reaction('👋')
-
-        await self.leave_voice_channel(ctx.guild.id)
+        await self.__leave_voice_channel()
 
     @commands.command(aliases=['st'])
     async def stop(self, ctx):
         '''読み上げ中の音声を停止するわ'''
         # 参加中のVCがなければメッセージを返す
-        vc = self.get_guild_voice_client(ctx.guild.id)
-        if vc is None:
+        if self.voice_client is None or\
+                self.voice_client.is_connected() is False:
             await ctx.channel.send('何も喋ってないわ。作業に集中しましょ')
             return
 
         # 再生中なら止める
-        vc = self.get_guild_voice_client(ctx.guild.id)
-        if vc.is_playing():
+        if self.voice_client.is_playing():
             await ctx.message.add_reaction('⏹')
-            vc.stop()
+            self.voice_client.stop()
 
     @commands.command(usage='読みを追加したい単語 読み', aliases=['word_add'])
     async def wa(self, ctx, *args) -> None:
@@ -330,15 +342,15 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         if before.channel == after.channel:
             return
 
-        vc = self.get_guild_voice_client(member.guild.id)
-        # VCに接続済みの場合の動作
-        if vc is not None:
-            # 関係のないサーバーは無視
-            if member.guild != self.target_channel.guild:
-                return
-            # 参加者がbotのみになったら退出
-            if len([1 for user in vc.channel.members if not user.bot]) < 1:
-                await self.leave_voice_channel(member.guild.id)
+        if self.voice_client is not None:
+            # VCに接続済みの場合の動作
+            if self.voice_client.is_connected():
+                # 関係のないサーバーは無視
+                if member.guild != self.target_channel.guild:
+                    return
+                # 参加者がbotのみになったら退出
+                if len([1 for user in self.voice_client.channel.members if not user.bot]) < 1:
+                    await self.__leave_voice_channel()
 
         # VCに未接続の場合の動作
         else:
@@ -367,7 +379,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
                     return
                 else:
                     # VCに接続
-                    await self._join(member, _target_channel)
+                    await self.__join(_target_channel, after.channel)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -379,7 +391,7 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         if message.author.bot:
             return
 
-        if self.target_channel != self.get_guild_voice_client(message.guild.id):
+        if self.target_channel is None:
             conf = GuildSetting.get_setting(message.guild.id)
             channel_id = conf['watch_channel_id']['text']
             self.target_channel = await self.bot.fetch_channel(channel_id)
@@ -388,28 +400,35 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
         if message.channel != self.target_channel:
             return
 
-        vc = self.get_guild_voice_client(message.guild.id)
-        if vc is not None:
-            msg = message.clean_content
-            if message.content.startswith('=sc '):
-                msg = f"{message.author.display_name}さんがスパチャしました。{msg[4:]}"
-            msg = self._convert_message(msg, self.read_char_cnt)
-            vf = await VoiceFactory.create_voice(msg, message.author.id)
-            if vf is None:
-                return
-            # 一定時間だけ再生を試みる
-            for _ in range(600):
-                try:
-                    vc.play(
-                        discord.FFmpegPCMAudio(str(vf)),
-                        after=lambda e: vf.unlink())
-                    break
-                except discord.ClientException:
-                    await asyncio.sleep(0.2)
-            else:
-                print(f"Play canceled : {message.clean_content}")
-                vf.unlink()
-                # await self.target_channel.send("長い文章を読み上げているから読み上げをやめるわ")
+        vc = self.voice_client
+        if vc is None:
+            return
+        if vc.is_connected() is False:
+            conf = GuildSetting.get_setting(message.guild.id)
+            channel_id = conf['watch_channel_id']['voice']
+            voice_channel = self.bot.get_channel(channel_id)
+            await self.__join(self.target_channel, voice_channel)
+
+        msg = message.clean_content
+        if message.content.startswith('=sc '):
+            msg = f"{message.author.display_name}さんがスパチャしました。{msg[4:]}"
+        msg = self._convert_message(msg, self.read_char_cnt)
+        vf = await VoiceFactory.create_voice(msg, message.author.id)
+        if vf is None:
+            return
+        # 一定時間だけ再生を試みる
+        for _ in range(600):
+            try:
+                vc.play(
+                    discord.FFmpegPCMAudio(str(vf)),
+                    after=lambda e: vf.unlink())
+                break
+            except discord.ClientException:
+                await asyncio.sleep(0.2)
+        else:
+            print(f"Play canceled : {message.clean_content}")
+            vf.unlink()
+            # await self.target_channel.send("長い文章を読み上げているから読み上げをやめるわ")
 
     def get_serif(self, name: str, *args) -> str:
         '''セリフを取得'''
@@ -427,16 +446,6 @@ class VoiceReading(commands.Cog, name='VC読み上げ'):
             # NOTE: 参考URL
             # https://arakan-pgm-ai.hatenablog.com/entry/2019/04/04/090000
             return re.sub('({})'.format('|'.join(map(re.escape, replacements.keys()))), lambda m: replacements[m.group()], serif)
-
-    def get_guild_voice_client(self, guild_id: int) -> discord.VoiceClient:
-        '''サーバーで利用されているVoiceClientを取得する'''
-        # ギルドの取得
-        guild = self.bot.get_guild(guild_id)
-        if guild is None:
-            return None
-
-        # ギルドに紐付いているVoiceClientを返却
-        return guild.voice_client
 
 
 def setup(bot):
