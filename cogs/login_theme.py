@@ -7,10 +7,12 @@ import discord
 from setting import UserSetting
 from cogs.utils.voice_util import VoiceFactory
 
+
 class LoginTheme(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.URL_REG = re.compile("https?://[\\w!\\?/\\+\\-_~=;\\.,\\*&@#\\$%\\(\\)'\\[\\]]+")
+        self.URL_REG = re.compile(
+            "https?://[\\w!\\?/\\+\\-_~=;\\.,\\*&@#\\$%\\(\\)'\\[\\]]+")
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -33,6 +35,10 @@ class LoginTheme(commands.Cog):
             return None
         vc = guild.voice_client
         if vc is None:
+            return
+
+        # botが参加していないVoiceChannelでのステータス変更なら無視
+        if after.channel != vc.channel:
             return
 
         # 音声ファイルを取得する
@@ -88,9 +94,10 @@ class LoginTheme(commands.Cog):
         # メッセージ送信者がそれ以外の人の設定を変更しようとしている場合の権限チェック
         if user_id != ctx.author.id:
             if ctx.author.guild_permissions.manage_nicknames is False:
+                # await ctx.reply("テーマの変更権限がないわ。本人か権利者に変更してもらって")
                 await ctx.send(f"{ctx.author.mention} テーマの変更権限がないわ。本人か権利者に変更してもらって")
                 return
-        
+
         # 受け取ったURLが音声ファイルならテーマファイルとして設定する
         guild_id = ctx.message.guild.id
         data = UserSetting.get_setting(user_id)
@@ -116,6 +123,7 @@ class LoginTheme(commands.Cog):
         if data is None:
             return None
         return await VoiceFactory.create_voice_from_url(data)
+
 
 def setup(bot):
     bot.add_cog(LoginTheme(bot))
